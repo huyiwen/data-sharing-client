@@ -1,0 +1,26 @@
+{
+    "QueryContract": {
+        "ChaincodeName": "ds_query",
+        "ChannelID": "mychannel"
+    },
+    "ServiceContract": {
+        "ChaincodeName": "ds_service_14",
+        "ChannelID": "mychannel"
+    },
+    "Services": {
+        "Service-0": {
+            "Information": {
+                "DisplayName": "服务",
+                "Description": "服务"
+            },
+            "Credentials": {
+                "DatabaseIP": "",
+                "DatabasePort": "",
+                "DatabaseUser": "",
+                "DatabasePassword": "",
+                "DatabaseName": "",
+                "DatabaseTable": ""
+            }
+        }
+    }
+}
