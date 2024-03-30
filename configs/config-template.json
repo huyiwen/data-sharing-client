@@ -10,8 +10,8 @@
     "Services": {
         "Service-0": {
             "Information": {
-                "DisplayName": "服务",
-                "Description": "服务"
+                "DisplayName": "",
+                "Description": ""
             },
             "Credentials": {
                 "DatabaseIP": "",
