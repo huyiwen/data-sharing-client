@@ -133,8 +133,6 @@ func file(callback func(fsnotify.Event), files ...string) {
 			panic(fmt.Errorf("%q: %s", p, err))
 		}
 	}
-
-	<-make(chan struct{}) // Block forever
 }
 
 func fileLoop(w *fsnotify.Watcher, files []string, callback func(fsnotify.Event)) {
