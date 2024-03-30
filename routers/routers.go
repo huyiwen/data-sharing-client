@@ -5,6 +5,7 @@ import (
 	_ "crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"path"
 	"service-client/chaincodeservice"
 	"time"
 )
@@ -16,14 +17,20 @@ type Routers struct {
 	ApplicationToMe  []Application
 	MyApplication    []ApplicationAnswer
 	Config           Config
-	configPath       string
+	configDir        string
+	configFile       string
 	MyIdentity       string
 	MyURL            string
 	PrivateKeySigner crypto.Signer
 }
 
 func Default(configPath string, getOrgSetup func(string) chaincodeservice.OrgSetup) *Routers {
-	config, port, err := loadConfig(configPath)
+	configFile := path.Join(configPath, "config.json")
+	port, err := loadPort()
+	if err != nil {
+		panic(fmt.Errorf("error loading port: %s", err))
+	}
+	config, err := loadConfig(configFile)
 	if err != nil {
 		panic(fmt.Errorf("error loading config: %s", err))
 	}
@@ -70,7 +77,8 @@ func Default(configPath string, getOrgSetup func(string) chaincodeservice.OrgSet
 		QueryContract:    queryContract,
 		ServiceContract:  serviceContract,
 		Config:           config,
-		configPath:       configPath,
+		configDir:        configPath,
+		configFile:       configFile,
 		MyIdentity:       myIdentity,
 		MyURL:            myURL,
 		PrivateKeySigner: orgSetup.PrivateKeySigner,

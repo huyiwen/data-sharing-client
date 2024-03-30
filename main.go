@@ -53,9 +53,17 @@ func internalOnlyMiddleware() gin.HandlerFunc {
 	}
 }
 
+func listenConfig(r *routers.Routers) {
+	r.ListenConfig()
+}
+
+func runApp(app *gin.Engine, port string) {
+	app.Run(":" + port)
+}
+
 func main() {
 
-	r := routers.Default("config.json", getOrgSetup)
+	r := routers.Default("configs", getOrgSetup)
 	app := gin.Default()
 	app.LoadHTMLGlob("/home/ubuntu/webApp/data-sharing-webui/templates/*")
 
@@ -79,5 +87,6 @@ func main() {
 	app.GET("/get_sendOut", r.GetSendOut())
 	app.GET("/get_services", r.IGetServices())
 
-	app.Run(":" + r.Port)
+	listenConfig(r)
+	runApp(app, r.Port)
 }
