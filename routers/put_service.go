@@ -13,6 +13,7 @@ func (r *Routers) IPutService() func(c *gin.Context) {
 		// 1. 接受前端传来的httpData
 		var httpData map[string]interface{}
 		if err := c.ShouldBindJSON(&httpData); err != nil {
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -20,6 +21,7 @@ func (r *Routers) IPutService() func(c *gin.Context) {
 		serviceID, err := r.ServiceContract.NewService(r.MyURL)
 		if err != nil {
 			err = fmt.Errorf("failed to generate new service ID: %v", err)
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -45,6 +47,7 @@ func (r *Routers) IPutService() func(c *gin.Context) {
 		err = r.updateConfig()
 		if err != nil {
 			err = fmt.Errorf("failed to update config: %v", err)
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

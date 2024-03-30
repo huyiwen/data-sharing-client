@@ -112,7 +112,6 @@ func (r *Routers) execVerify(referer string, InitiatorPublicKey *ecdsa.PublicKey
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		fmt.Println("execVerify http.DefaultClient.Do() err:", err)
-		// c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return false, err
 	}
 	defer resp.Body.Close()
@@ -129,7 +128,6 @@ func (r *Routers) execVerify(referer string, InitiatorPublicKey *ecdsa.PublicKey
 	fmt.Println("respData:", respData)
 	if err != nil {
 		fmt.Println("execVerify unmarshal response err: ", err)
-		// c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return false, err
 	}
 

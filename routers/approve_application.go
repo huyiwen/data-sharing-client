@@ -1,6 +1,7 @@
 package routers
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -12,6 +13,7 @@ func (r *Routers) IApproveApplication() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var httpData map[string]interface{}
 		if err := c.ShouldBindJSON(&httpData); err != nil {
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
 
@@ -21,6 +23,7 @@ func (r *Routers) IApproveApplication() func(c *gin.Context) {
 
 		tokenId, err := r.ServiceContract.ApproveServiceFor(serviceID, recipientIdentity)
 		if err != nil {
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

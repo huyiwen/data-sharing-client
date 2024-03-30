@@ -83,7 +83,7 @@ func (cc *ServiceContract) ApproveServiceFor(serviceID string, recipientIdentity
 
 func (cc *ServiceContract) HasAccessToService(requesterIdentity string, serviceID string) (bool, error) {
 
-	operator, err := cc.ClientAccountID()
+	operator, err := cc.Owner()
 	if err != nil {
 		return false, err
 	}
@@ -107,6 +107,10 @@ func (cc *ServiceContract) HasAccessToService(requesterIdentity string, serviceI
 func (cc *ServiceContract) Initialize(name string, symbol string, ownerMSPID string) error {
 	_, err := cc.OrgSetup.Invoke(cc.ChaincodeName, cc.ChannelID, "Initialize", []string{name, symbol, ownerMSPID})
 	return err
+}
+
+func (cc *ServiceContract) Owner() (string, error) {
+	return cc.OrgSetup.Query(cc.ChaincodeName, cc.ChannelID, "Owner", []string{})
 }
 
 func (cc *ServiceContract) Burn(tokenId string) error {

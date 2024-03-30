@@ -19,6 +19,7 @@ func (r *Routers) CRequestData() func(*gin.Context) {
 		var httpData map[string]interface{}
 		if err := c.ShouldBindJSON(&httpData); err != nil {
 			err = fmt.Errorf("failed to parse request data: %s", err)
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -35,6 +36,7 @@ func (r *Routers) CRequestData() func(*gin.Context) {
 		service, valid := r.Config.Services[serviceID]
 		if !valid {
 			err := fmt.Errorf("service not found in config: %s", serviceID)
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -53,12 +55,14 @@ func (r *Routers) CRequestData() func(*gin.Context) {
 		verified, err := r.execVerify(initiatorURL, publicKey)
 		if err != nil {
 			fmt.Println("send_application verify signature err: ", err)
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		if !verified {
 			err := fmt.Errorf("failed to verify signature")
 			queryID := createQuery("", "unkown user")
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "queryID": queryID})
 			return
 		}
@@ -66,12 +70,14 @@ func (r *Routers) CRequestData() func(*gin.Context) {
 		access, err := r.ServiceContract.HasAccessToService(identity, serviceID)
 		if err != nil {
 			err = fmt.Errorf("failed to get balance: %s", err)
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		if !access {
 			err = fmt.Errorf("insufficient balance")
 			queryID := createQuery("", "no access")
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error(), "queryID": queryID})
 			return
 		}

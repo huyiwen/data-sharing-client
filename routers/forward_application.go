@@ -15,6 +15,7 @@ func (r *Routers) ForwardApplication() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var data map[string]interface{}
 		if err := c.ShouldBindJSON(&data); err != nil {
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -42,6 +43,7 @@ func (r *Routers) ForwardApplication() func(c *gin.Context) {
 
 		sendData, err := json.Marshal(data)
 		if err != nil {
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 
@@ -51,6 +53,7 @@ func (r *Routers) ForwardApplication() func(c *gin.Context) {
 
 		req, err := http.NewRequest("POST", PublisherURL+"/send_application", bytes.NewBuffer(sendData))
 		if err != nil {
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}

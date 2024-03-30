@@ -13,6 +13,7 @@ func (r *Routers) IDebugQuery() func(*gin.Context) {
 
 		var data map[string]interface{}
 		if err := c.ShouldBindJSON(&data); err != nil {
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

@@ -12,6 +12,7 @@ func (r *Routers) ReceiveMessage() func(c *gin.Context) {
 		// 1. receive raw message
 		var data map[string]interface{}
 		if err := c.ShouldBindJSON(&data); err != nil {
+			fmt.Printf("error: %v\n", err)
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
