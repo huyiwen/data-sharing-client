@@ -67,7 +67,7 @@ func (r *Routers) CRequestData() func(*gin.Context) {
 			return
 		}
 
-		access, err := r.ServiceContract.HasAccessToService(identity, serviceID)
+		access, err := r.ServiceContract.HasAccessToService(serviceID)
 		if err != nil {
 			err = fmt.Errorf("failed to get balance: %s", err)
 			fmt.Printf("error: %v\n", err)

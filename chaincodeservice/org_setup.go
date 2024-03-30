@@ -1,19 +1,14 @@
 package chaincodeservice
 
 import (
+	"context"
 	"crypto"
 	"crypto/ecdsa"
-	"crypto/x509"
 	"fmt"
 	"log"
-	"os"
-	"path"
 	"time"
 
 	"github.com/hyperledger/fabric-gateway/pkg/client"
-	"github.com/hyperledger/fabric-gateway/pkg/identity"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 type OrgSetup struct {
@@ -29,7 +24,10 @@ type OrgSetup struct {
 	PublicKey        *ecdsa.PublicKey
 	PrivateKeySigner crypto.Signer
 	PrivateKey       *ecdsa.PrivateKey
+	Identity         string
 }
+
+type EventListener func(*client.ChaincodeEvent)
 
 func Initialize(setup OrgSetup) (*OrgSetup, error) {
 	log.Printf("Initializing connection for %s...\n", setup.OrgName)
@@ -96,103 +94,38 @@ func (setup *OrgSetup) Invoke(chainCodeName, channelID, function string, args []
 	return fmt.Sprintf("Transaction ID : %s Response: %s", txn_committed.TransactionID(), txn_endorsed.Result()), nil
 }
 
-func (setup *OrgSetup) SubmitAsync(chainCodeName, channelID, function string, args []string) error {
-	fmt.Printf("SubmitAsync channel: %s, chaincode: %s, function: %s, args: %s\n", channelID, chainCodeName, function, args)
+func (setup *OrgSetup) Submit(chainCodeName, channelID, function string, args []string) error {
+
+	fmt.Printf("Submit channel: %s, chaincode: %s, function: %s, args: %s\n", channelID, chainCodeName, function, args)
 
 	network := setup.Gateway.GetNetwork(channelID)
 	contract := network.GetContract(chainCodeName)
 
-	submitResult, commit, err := contract.SubmitAsync(function, client.WithArguments(args...))
+	_, err := contract.SubmitTransaction(function, args...)
 	if err != nil {
-		return fmt.Errorf("failed to submit transaction asynchronously: %w", err)
+		return fmt.Errorf("failed to submit transaction: %w", err)
 	}
-
-	fmt.Printf("\n*** Successfully submitted transaction to transfer ownership from %s to Mark. \n", string(submitResult))
-	fmt.Println("*** Waiting for transaction commit.")
-
-	if commitStatus, err := commit.Status(); err != nil {
-		return fmt.Errorf("failed to get commit status: %w", err)
-	} else if !commitStatus.Successful {
-		return fmt.Errorf("transaction %s failed to commit with status: %d", commitStatus.TransactionID, int32(commitStatus.Code))
-	}
-
 	return nil
 }
 
-// newGrpcConnection creates a gRPC connection to the Gateway server.
-func (setup OrgSetup) newGrpcConnection() *grpc.ClientConn {
-	certificate, err := loadCertificate(setup.TLSCertPath)
+func (setup *OrgSetup) StartListen(chainCodeName, channelID string, callbacks []EventListener) {
+
+	network := setup.Gateway.GetNetwork(channelID)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	events, err := network.ChaincodeEvents(ctx, chainCodeName)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("failed to start chaincode event listening: %w", err))
 	}
+	fmt.Printf("Listening for chaincode events on channel %s for chaincode %s\n", channelID, chainCodeName)
 
-	certPool := x509.NewCertPool()
-	certPool.AddCert(certificate)
-	transportCredentials := credentials.NewClientTLSFromCert(certPool, setup.GatewayPeer)
-
-	connection, err := grpc.Dial(setup.PeerEndpoint, grpc.WithTransportCredentials(transportCredentials))
-	if err != nil {
-		panic(fmt.Errorf("failed to create gRPC connection: %w", err))
-	}
-
-	return connection
-}
-
-// newIdentity creates a client identity for this Gateway connection using an X.509 certificate.
-func (setup OrgSetup) newIdentity() (*identity.X509Identity, *ecdsa.PublicKey) {
-	certificate, err := loadCertificate(setup.CertPath)
-	if err != nil {
-		panic(err)
-	}
-
-	id, err := identity.NewX509Identity(setup.MSPID, certificate)
-	if err != nil {
-		panic(err)
-	}
-
-	pubKey, ok := certificate.PublicKey.(*ecdsa.PublicKey)
-	if !ok {
-		return nil, nil
-	}
-	fmt.Println("newIdentity generates public key:", pubKey)
-
-	return id, pubKey
-}
-
-// newSign creates a function that generates a digital signature from a message digest using a private key.
-func (setup OrgSetup) newSign() (identity.Sign, crypto.Signer, *ecdsa.PrivateKey) {
-	files, err := os.ReadDir(setup.KeyPath)
-	if err != nil {
-		panic(fmt.Errorf("failed to read private key directory: %w", err))
-	}
-	privateKeyPEM, err := os.ReadFile(path.Join(setup.KeyPath, files[0].Name()))
-
-	if err != nil {
-		panic(fmt.Errorf("failed to read private key file: %w", err))
-	}
-
-	privateKey, err := identity.PrivateKeyFromPEM(privateKeyPEM)
-	if err != nil {
-		panic(err)
-	}
-
-	sign, err := identity.NewPrivateKeySign(privateKey)
-	if err != nil {
-		panic(err)
-	}
-
-	privateKeySigner, ok := privateKey.(crypto.Signer)
-	if !ok {
-		panic(fmt.Errorf("failed to generate signer"))
-	}
-
-	return sign, privateKeySigner, privateKey.(*ecdsa.PrivateKey)
-}
-
-func loadCertificate(filename string) (*x509.Certificate, error) {
-	certificatePEM, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read certificate file: %w", err)
-	}
-	return identity.CertificateFromPEM(certificatePEM)
+	go func() {
+		for event := range events {
+			for _, callback := range callbacks {
+				callback(event)
+			}
+		}
+	}()
 }

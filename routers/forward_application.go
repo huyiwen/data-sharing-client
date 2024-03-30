@@ -20,7 +20,7 @@ func (r *Routers) ForwardApplication() func(c *gin.Context) {
 			return
 		}
 		newApplication := ApplicationAnswer{
-			InitiatorID:     r.MyIdentity,
+			InitiatorID:     r.OrgSetup.Identity,
 			InitiatorURL:    r.MyURL,
 			ServiceID:       data["ServiceID"].(string),
 			ServiceName:     data["ServiceName"].(string),
@@ -29,7 +29,7 @@ func (r *Routers) ForwardApplication() func(c *gin.Context) {
 			ApplicationTime: time.Now().Format("2006-01-02 15:04:05")}
 		r.MyApplication = append(r.MyApplication, newApplication)
 		PublisherURL := data["PublisherURL"].(string)
-		data["InitiatorID"] = r.MyIdentity
+		data["InitiatorID"] = r.OrgSetup.Identity
 		data["InitiatorURL"] = r.MyURL
 		// encode pubKey
 		// encodedPubKey, err := encodePublicKey(MyPubKey)

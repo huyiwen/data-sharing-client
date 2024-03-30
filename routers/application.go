@@ -2,9 +2,11 @@ package routers
 
 import (
 	"crypto/ecdsa"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hyperledger/fabric-gateway/pkg/client"
 )
 
 type ApplicationAnswer struct {
@@ -38,5 +40,12 @@ func (r *Routers) GetToMe() func(*gin.Context) {
 func (r *Routers) GetSendOut() func(*gin.Context) {
 	return func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"applications": r.MyApplication})
+	}
+}
+
+func (r *Routers) ListenTransfer(e *client.ChaincodeEvent) {
+	fmt.Printf("Transfer event received: %s\n", e.Payload)
+	if e.EventName == "Transfer" {
+		fmt.Printf("Transfer event received: %s\n", e.Payload)
 	}
 }

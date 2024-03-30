@@ -23,6 +23,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+var nilData = "[{\"data\": \"nil\"}]"
+
 func GetPublicKey(X, Y string) *ecdsa.PublicKey {
 	InitiatorPublicKey := new(ecdsa.PublicKey)
 	InitiatorPublicKey.X, _ = new(big.Int).SetString(X, 10)
@@ -153,18 +155,19 @@ func (r *Routers) execVerify(referer string, InitiatorPublicKey *ecdsa.PublicKey
 		return false, err
 	}
 }
+
 func (r *Routers) dataBase(usrname string, passwd string, ip string, port string, databaseName string, tableName string) string {
 	dsn := usrname + ":" + passwd + "@tcp(" + ip + ":" + port + ")/" + databaseName
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		fmt.Printf("dsn:%s invalid,err:%v\n", dsn, err)
-		return "nil"
+		return nilData
 	}
 	defer db.Close()
 	err = db.Ping() //尝试连接数据库
 	if err != nil {
 		fmt.Printf("open %s faild,err:%v\n", dsn, err)
-		return "nil"
+		return nilData
 	}
 	sqlStr := "select * from " + tableName + ";"
 	rows, err := db.Query(sqlStr)
@@ -195,7 +198,7 @@ func (r *Routers) dataBase(usrname string, passwd string, ip string, port string
 		retjson, _ := json.Marshal(ret)
 		return string(retjson)
 	} else {
-		return "[{'apple': 10}, {'apple': 20}, {'apple': 30}]"
+		return nilData
 	}
 }
 

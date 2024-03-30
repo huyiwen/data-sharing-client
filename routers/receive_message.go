@@ -20,12 +20,12 @@ func (r *Routers) ReceiveMessage() func(c *gin.Context) {
 		fmt.Println("receive_message receive message", data)
 		// 2. generate the signature
 		message := data["message"]
-		signature, err := SignMessage(message.(string), r.PrivateKeySigner)
+		signature, err := SignMessage(message.(string), r.OrgSetup.PrivateKeySigner)
 		if err != nil {
 			fmt.Println("receive_message SignMessage() err", err)
 		}
 		fmt.Println("receive_message generate signature", signature)
-		fmt.Println("receive_message 's signer ", r.PrivateKeySigner)
+		fmt.Println("receive_message 's signer ", r.OrgSetup.PrivateKeySigner)
 		// content := map[string]interface{}{
 		// 	"message": message,
 		// 	"sign":    signature,

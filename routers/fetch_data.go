@@ -19,12 +19,12 @@ func (r *Routers) FetchData() func(c *gin.Context) {
 			return
 		}
 
-		data["InitiatorID"] = r.MyIdentity
+		data["InitiatorID"] = r.OrgSetup.Identity
 		data["InitiatorURL"] = r.MyURL
 		MyPubKey := r.QueryContract.OrgSetup.PublicKey
 		data["InitiatorPublicKeyX"] = MyPubKey.X.Text(10)
 		data["InitiatorPublicKeyY"] = MyPubKey.Y.Text(10)
-		data["InitiatorIdentity"] = r.MyIdentity
+		data["InitiatorIdentity"] = r.OrgSetup.Identity
 		PublisherURL := data["PublisherURL"].(string)
 
 		sendData, err := json.Marshal(data)

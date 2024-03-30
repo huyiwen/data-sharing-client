@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/hyperledger/fabric-gateway/pkg/client"
 )
 
 type Query struct {
@@ -25,6 +27,13 @@ type QueryContract struct {
 	OrgSetup      *OrgSetup
 	ChaincodeName string
 	ChannelID     string
+}
+
+func (cc *QueryContract) StartListen(callbacks []EventListener) {
+	callbacks = append(callbacks, func(e *client.ChaincodeEvent) {
+		fmt.Printf("Event received: %v\n", e)
+	})
+	cc.OrgSetup.StartListen(cc.ChaincodeName, cc.ChannelID, callbacks)
 }
 
 func (cc *QueryContract) CreateQuery(certificate, dataDigest string, dataRows int, initiatorID, initiatorMSPID, legitimacy, queriedTable, queryDigest, serviceID string) (string, error) {

@@ -1,7 +1,6 @@
 package routers
 
 import (
-	"crypto"
 	_ "crypto/ecdsa"
 	"encoding/json"
 	"fmt"
@@ -10,16 +9,15 @@ import (
 )
 
 type Routers struct {
-	Port             string
-	QueryContract    chaincodeservice.QueryContract
-	ServiceContract  chaincodeservice.ServiceContract
-	ApplicationToMe  []Application
-	MyApplication    []ApplicationAnswer
-	Config           Config
-	configFile       string
-	MyIdentity       string
-	MyURL            string
-	PrivateKeySigner crypto.Signer
+	Port            string
+	QueryContract   chaincodeservice.QueryContract
+	ServiceContract chaincodeservice.ServiceContract
+	ApplicationToMe []Application
+	MyApplication   []ApplicationAnswer
+	Config          Config
+	configFile      string
+	OrgSetup        *chaincodeservice.OrgSetup
+	MyURL           string
 }
 
 func Default(configFile string, getOrgSetup func(string) chaincodeservice.OrgSetup) *Routers {
@@ -32,6 +30,13 @@ func Default(configFile string, getOrgSetup func(string) chaincodeservice.OrgSet
 		panic(fmt.Errorf("error loading config: %s", err))
 	}
 
+	myIP, err := getOuterIP()
+	if err != nil {
+		panic(fmt.Errorf("error getting outer IP: %s", err))
+	}
+	myURL := "http://" + myIP + ":" + port
+
+	// setup org
 	orgSetup, err := chaincodeservice.Initialize(getOrgSetup(port))
 	if err != nil {
 		panic(fmt.Errorf("error initializing OrgSetup: %s", err))
@@ -39,6 +44,7 @@ func Default(configFile string, getOrgSetup func(string) chaincodeservice.OrgSet
 	bytes, _ := json.Marshal(orgSetup)
 	fmt.Printf("Initializing OrgSetup - OrgSetup %s\n", string(bytes))
 
+	// get contracts
 	queryContract := chaincodeservice.QueryContract{OrgSetup: orgSetup, ChaincodeName: config.QueryContract.ChaincodeName, ChannelID: config.QueryContract.ChannelID}
 	serviceContract := chaincodeservice.ServiceContract{OrgSetup: orgSetup, ChaincodeName: config.ServiceContract.ChaincodeName, ChannelID: config.ServiceContract.ChannelID}
 
@@ -60,23 +66,22 @@ func Default(configFile string, getOrgSetup func(string) chaincodeservice.OrgSet
 	if err != nil {
 		panic(fmt.Errorf("error initializing ServiceContract: %s, check service contract initialization", err))
 	}
+	orgSetup.Identity = myIdentity
 	fmt.Printf("Initializing ServiceContract - My Identity: %s\n", myIdentity)
 	fmt.Printf("Initializing ServiceContract - Services: %d\n", len(services))
 
-	myIP, err := getOuterIP()
-	if err != nil {
-		panic(fmt.Errorf("error getting outer IP: %s", err))
+	r := Routers{
+		Port:            port,
+		QueryContract:   queryContract,
+		ServiceContract: serviceContract,
+		Config:          config,
+		configFile:      configFile,
+		OrgSetup:        orgSetup,
+		MyURL:           myURL,
 	}
-	myURL := "http://" + myIP + ":" + port
 
-	return &Routers{
-		Port:             port,
-		QueryContract:    queryContract,
-		ServiceContract:  serviceContract,
-		Config:           config,
-		configFile:       configFile,
-		MyIdentity:       myIdentity,
-		MyURL:            myURL,
-		PrivateKeySigner: orgSetup.PrivateKeySigner,
-	}
+	queryContract.StartListen(nil)
+	serviceContract.StartListen([]chaincodeservice.EventListener{r.ListenTransfer})
+
+	return &r
 }
