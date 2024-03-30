@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -35,6 +36,7 @@ type ServiceType struct {
 }
 
 type Config struct {
+	WebUIPath     string `json:"WebUIPath"`
 	QueryContract struct {
 		ChaincodeName string `json:"ChaincodeName"`
 		ChannelID     string `json:"ChannelID"`
@@ -85,7 +87,7 @@ func loadConfig(filePath string) (Config, error) {
 }
 
 func (r *Routers) ListenConfig() {
-	file(func(e fsnotify.Event) {
+	go file(func(e fsnotify.Event) {
 		if e.Has(fsnotify.Write) && e.Name == r.configFile {
 			config, err := loadConfig(r.configFile)
 			if err != nil {
@@ -133,9 +135,25 @@ func file(callback func(fsnotify.Event), files ...string) {
 			panic(fmt.Errorf("%q: %s", p, err))
 		}
 	}
+
+	// Block forever
+	<-make(chan struct{})
 }
 
 func fileLoop(w *fsnotify.Watcher, files []string, callback func(fsnotify.Event)) {
+
+	var debounceTimer *time.Timer
+	debounceDuration := 2 * time.Second // 防抖时间，可以根据需要调整
+
+	processEvent := func(e fsnotify.Event) {
+		for _, f := range files {
+			if filepath.Base(f) == filepath.Base(e.Name) {
+				callback(e)
+				break
+			}
+		}
+	}
+
 	for {
 		select {
 		// Read from Errors.
@@ -150,11 +168,15 @@ func fileLoop(w *fsnotify.Watcher, files []string, callback func(fsnotify.Event)
 				return
 			}
 
-			for _, f := range files {
-				if f == e.Name {
-					callback(e)
-				}
+			// 如果定时器已经存在，停止并重置定时器
+			if debounceTimer != nil {
+				debounceTimer.Stop()
 			}
+
+			// 创建或重置定时器，当定时器触发时调用processEvent处理事件
+			debounceTimer = time.AfterFunc(debounceDuration, func() {
+				processEvent(e)
+			})
 		}
 	}
 }

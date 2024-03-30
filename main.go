@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"path"
 
 	"github.com/gin-gonic/gin"
 
@@ -63,12 +64,12 @@ func runApp(app *gin.Engine, port string) {
 
 func main() {
 
-	r := routers.Default("configs", getOrgSetup)
+	r := routers.Default("configs/config.json", getOrgSetup)
 	app := gin.Default()
-	app.LoadHTMLGlob("/home/ubuntu/webApp/data-sharing-webui/templates/*")
+	app.LoadHTMLGlob(path.Join(r.Config.WebUIPath, "templates", "*"))
 
 	// pages
-	app.Static("/static", "/home/ubuntu/webApp/data-sharing-webui/static")
+	app.Static("/static", path.Join(r.Config.WebUIPath, "static"))
 	app.GET("/", r.IIndex())
 	app.GET("/login", r.ILogin())
 	app.GET("/applicationToMe", r.IApplicationToMe())

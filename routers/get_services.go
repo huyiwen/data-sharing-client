@@ -13,7 +13,9 @@ type ViewService struct {
 	PublisherURL       string `json:"PublisherURL"`
 	PublisherPublicKey string `json:"PublisherPublicKey"`
 	Comment            string `json:"Comment"`
-	TransactionHash    string `json:"TransactionHash"`
+	Table              string `json:"Table"`
+	Approved           bool   `json:"Approved"`
+	NoAccess           bool   `json:"NoAccess"`
 }
 
 func (r *Routers) IGetServices() func(c *gin.Context) {
@@ -28,13 +30,21 @@ func (r *Routers) IGetServices() func(c *gin.Context) {
 		for _, serviceURI := range serviceURIs {
 			splitted := strings.Split(serviceURI, "|")
 			serviceID, serviceURL := splitted[0], splitted[1]
+
+			access, err := r.ServiceContract.HasAccessToService(r.MyIdentity, serviceID)
+			if err != nil {
+				access = false
+			}
+
 			s := ViewService{
 				ServiceName:        r.Config.Services[serviceID].Information.DisplayName,
 				ServiceID:          serviceID,
 				Comment:            r.Config.Services[serviceID].Information.Description,
 				PublisherURL:       serviceURL,
 				PublisherPublicKey: "Not available",
-				TransactionHash:    r.Config.Services[serviceID].Credentials.DatabaseTable,
+				Table:              r.Config.Services[serviceID].Credentials.DatabaseTable,
+				Approved:           access,
+				NoAccess:           !access,
 			}
 			services = append(services, s)
 		}

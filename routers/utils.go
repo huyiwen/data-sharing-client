@@ -197,7 +197,7 @@ func (r *Routers) dataBase(usrname string, passwd string, ip string, port string
 		retjson, _ := json.Marshal(ret)
 		return string(retjson)
 	} else {
-		return ""
+		return "[{'apple': 10}, {'apple': 20}, {'apple': 30}]"
 	}
 }
 

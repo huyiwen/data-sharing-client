@@ -104,8 +104,8 @@ func (cc *ServiceContract) HasAccessToService(requesterIdentity string, serviceI
 
 // ======= Original Contract Interfaces =======
 
-func (cc *ServiceContract) Initialize(name string, symbol string) error {
-	_, err := cc.OrgSetup.Invoke(cc.ChaincodeName, cc.ChannelID, "Initialize", []string{name, symbol})
+func (cc *ServiceContract) Initialize(name string, symbol string, ownerMSPID string) error {
+	_, err := cc.OrgSetup.Invoke(cc.ChaincodeName, cc.ChannelID, "Initialize", []string{name, symbol, ownerMSPID})
 	return err
 }
 
