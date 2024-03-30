@@ -33,7 +33,7 @@ func (cc *QueryContract) StartListen(callbacks []EventListener) {
 	callbacks = append(callbacks, func(e *client.ChaincodeEvent) {
 		fmt.Printf("Event received: %v\n", e)
 	})
-	cc.OrgSetup.StartListen(cc.ChaincodeName, cc.ChannelID, callbacks)
+	go cc.OrgSetup.StartListen(cc.ChaincodeName, cc.ChannelID, callbacks)
 }
 
 func (cc *QueryContract) CreateQuery(certificate, dataDigest string, dataRows int, initiatorID, initiatorMSPID, legitimacy, queriedTable, queryDigest, serviceID string) (string, error) {

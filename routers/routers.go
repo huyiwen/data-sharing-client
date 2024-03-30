@@ -80,6 +80,7 @@ func Default(configFile string, getOrgSetup func(string) chaincodeservice.OrgSet
 		MyURL:           myURL,
 	}
 
+	r.ListenConfig()
 	queryContract.StartListen(nil)
 	serviceContract.StartListen([]chaincodeservice.EventListener{r.ListenTransfer})
 

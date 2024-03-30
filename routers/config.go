@@ -87,7 +87,7 @@ func loadConfig(filePath string) (Config, error) {
 }
 
 func (r *Routers) ListenConfig() {
-	go file(func(e fsnotify.Event) {
+	go listenFile(func(e fsnotify.Event) {
 		if e.Has(fsnotify.Write) && e.Name == r.configFile {
 			config, err := loadConfig(r.configFile)
 			if err != nil {
@@ -100,10 +100,10 @@ func (r *Routers) ListenConfig() {
 	}, r.configFile)
 }
 
-// Watch one or more files, but instead of watching the file directly it watches
+// Watch one or more files, but instead of watching the listenFile directly it watches
 // the parent directory. This solves various issues where files are frequently
 // renamed, such as editors saving them.
-func file(callback func(fsnotify.Event), files ...string) {
+func listenFile(callback func(fsnotify.Event), files ...string) {
 	if len(files) < 1 {
 		panic("must specify at least one file to watch")
 	}
@@ -170,12 +170,15 @@ func fileLoop(w *fsnotify.Watcher, files []string, callback func(fsnotify.Event)
 
 			// 如果定时器已经存在，停止并重置定时器
 			if debounceTimer != nil {
-				debounceTimer.Stop()
+				if !debounceTimer.Stop() {
+					<-debounceTimer.C
+				}
 			}
 
 			// 创建或重置定时器，当定时器触发时调用processEvent处理事件
 			debounceTimer = time.AfterFunc(debounceDuration, func() {
 				processEvent(e)
+				debounceTimer = nil
 			})
 		}
 	}

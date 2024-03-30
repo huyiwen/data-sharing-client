@@ -124,9 +124,6 @@ func (setup *OrgSetup) StartListen(chainCodeName, channelID string, callbacks []
 	go func() {
 		for event := range events {
 			fmt.Printf("Received chaincode event: %s %s %s\n", event.EventName, event.TransactionID, event.Payload)
-			for _, callback := range callbacks {
-				callback(event)
-			}
 		}
 	}()
 }

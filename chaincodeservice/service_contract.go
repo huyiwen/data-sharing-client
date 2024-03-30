@@ -16,8 +16,7 @@ type ServiceContract struct {
 }
 
 func (cc *ServiceContract) StartListen(callbacks []EventListener) {
-
-	cc.OrgSetup.StartListen(cc.ChaincodeName, cc.ChannelID, callbacks)
+	go cc.OrgSetup.StartListen(cc.ChaincodeName, cc.ChannelID, callbacks)
 }
 
 // Put a new service on chain. Return the new service ID
