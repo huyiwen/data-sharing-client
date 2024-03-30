@@ -12,7 +12,9 @@ func (r *Routers) ILogin() func(c *gin.Context) {
 
 func (r *Routers) IIndex() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		c.HTML(200, "index.html", nil)
+		c.HTML(200, "index.html", gin.H{
+			"MyIdentity": r.MyIdentity,
+		})
 	}
 }
 
