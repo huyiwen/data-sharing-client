@@ -76,7 +76,7 @@ func main() {
 	app.GET("/myApplication", r.IMyApplication())
 
 	// apis
-	app.Any("/send_application", r.SendApplication())
+	app.POST("/send_application", r.SendApplication())
 	app.POST("/request_data", r.CRequestData())
 	app.POST("/put_service", r.IPutService())
 	app.POST("/forward_application", r.ForwardApplication())
